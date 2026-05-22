@@ -1,33 +1,13 @@
+//
+//  HarrahsLoyaltyApp.swift
+//  Harrahs Las Vegas Loyalty App
+//
+//
+
+
 import SwiftUI
 import CoreImage.CIFilterBuiltins
 import UIKit
-
-// MARK: - App
-
-@main
-struct HarrahsLoyaltyApp: App {
-    var body: some Scene {
-        WindowGroup {
-            RootView()
-        }
-    }
-}
-
-// MARK: - Root
-
-struct RootView: View {
-    @StateObject private var viewModel = HarrahsViewModel()
-
-    var body: some View {
-        Group {
-            if viewModel.isAuthenticated {
-                MainTabView(viewModel: viewModel)
-            } else {
-                SignInView(viewModel: viewModel)
-            }
-        }
-    }
-}
 
 // MARK: - Theme
 
@@ -121,6 +101,16 @@ enum LoyaltyTier: Int, CaseIterable, Identifiable, Codable {
         case .icon: return "🥇"
         case .x: return "💎"
         case .ultimate: return "🌟"
+        }
+    }
+    
+    var image: String {
+        switch self {
+        case .star: return "starImage"
+        case .legend: return "legendImage"
+        case .icon: return "iconImage"
+        case .x: return "xImage"
+        case .ultimate: return "ultimateImage"
         }
     }
 
@@ -453,7 +443,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .star,
             description: "Live brass band, Mardi Gras beads giveaway, signature cocktails. Best costume wins $250 slot credit.",
             status: .open,
-            emoji: "🎭"
+            emoji: "event1Image"
         ),
         CasinoEvent(
             id: 2,
@@ -466,7 +456,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .star,
             description: "Qualify for the main Harrah's Poker Open. $10,000 prize pool for satellite winners.",
             status: .registrationOpen,
-            emoji: "♠️"
+            emoji: "event2Image"
         ),
         CasinoEvent(
             id: 3,
@@ -479,7 +469,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .star,
             description: "Big Elvis tribute show followed by interactive dueling pianos. Includes one complimentary drink.",
             status: .waitlist,
-            emoji: "🎹"
+            emoji: "event3Image"
         ),
         CasinoEvent(
             id: 4,
@@ -492,7 +482,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .legend,
             description: "$25,000 prize pool. Winner receives exclusive Harrah's Unity pin and $500 dining credit.",
             status: .spotsLeft,
-            emoji: "🃏"
+            emoji: "event4Image"
         ),
         CasinoEvent(
             id: 5,
@@ -505,7 +495,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .star,
             description: "Voodoo-themed masquerade with live DJ, costume contest and midnight prize draw.",
             status: .preRegistration,
-            emoji: "🎃"
+            emoji: "event5Image"
         ),
         CasinoEvent(
             id: 6,
@@ -518,7 +508,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .star,
             description: "Live country music tribute, line dancing lessons and special menu items.",
             status: .open,
-            emoji: "🤠"
+            emoji: "event6Image"
         ),
         CasinoEvent(
             id: 7,
@@ -531,7 +521,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .star,
             description: "Double Tier Credits on all play, hourly prize draws and exclusive merch pop-up.",
             status: .open,
-            emoji: "🌟"
+            emoji: "event7Image"
         ),
         CasinoEvent(
             id: 8,
@@ -544,7 +534,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .icon,
             description: "5-course tasting menu curated by executive chef. Limited to 10 guests.",
             status: .inviteOnly,
-            emoji: "🍽"
+            emoji: "event8Image"
         ),
         CasinoEvent(
             id: 9,
@@ -557,7 +547,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .star,
             description: "Hourly Mystery Bonus triggers on random machines. Guaranteed $50 prize for every 50th player.",
             status: .comingSoon,
-            emoji: "🎰"
+            emoji: "event9Image"
         ),
         CasinoEvent(
             id: 10,
@@ -570,7 +560,7 @@ struct CasinoEvent: Identifiable, Hashable {
             requiredTier: .legend,
             description: "Live headliner performance, open bar for VIP, champagne toast at midnight and exclusive 2027 Unity chip.",
             status: .earlyBird,
-            emoji: "🎆"
+            emoji: "event10Image"
         )
     ]
 }
@@ -633,12 +623,16 @@ final class HarrahsViewModel: ObservableObject {
     let bonuses = BonusOffer.samples
     let events = CasinoEvent.samples
 
-    @Published var isAuthenticated: Bool = false {
-        didSet { Self.defaults.set(isAuthenticated, forKey: Keys.isAuthenticated) }
+    @Published var username: String = "Guest" {
+        didSet {
+            Self.defaults.set(username, forKey: Keys.username)
+        }
     }
 
-    @Published var username: String = "" {
-        didSet { Self.defaults.set(username, forKey: Keys.username) }
+    @Published var isAuthenticated: Bool = false {
+        didSet {
+            Self.defaults.set(isAuthenticated, forKey: Keys.isAuthenticated)
+        }
     }
 
     @Published var notificationsEnabled: Bool = true {
@@ -689,7 +683,7 @@ final class HarrahsViewModel: ObservableObject {
 
     init() {
         isAuthenticated = Self.defaults.bool(forKey: Keys.isAuthenticated)
-        username = Self.defaults.string(forKey: Keys.username) ?? ""
+        username = Self.defaults.string(forKey: Keys.username) ?? "Guest"
 
         if Self.defaults.object(forKey: Keys.notifications) == nil {
             notificationsEnabled = true
@@ -778,13 +772,19 @@ final class HarrahsViewModel: ObservableObject {
             return false
         }
 
-        self.username = cleanUsername
         isAuthenticated = true
+        self.username = cleanUsername
+
         return true
+    }
+
+    func register(username: String, password: String) -> Bool {
+        signIn(username: username, password: password)
     }
 
     func signOut() {
         isAuthenticated = false
+        username = "Guest"
     }
 
     func redeem(_ bonus: BonusOffer) -> RedeemResult {
@@ -970,30 +970,93 @@ struct SignInView: View {
 
 struct MainTabView: View {
     @ObservedObject var viewModel: HarrahsViewModel
-
+    @State var selectedTab = 0
+        private let tabs = ["Bonuses", "Events", "About", "Profile"]
     var body: some View {
-        TabView {
-            BonusesView(viewModel: viewModel)
-                .tabItem {
-                    Label("Bonuses", systemImage: "gift.fill")
-                }
-
-            EventsView(viewModel: viewModel)
-                .tabItem {
-                    Label("Events", systemImage: "calendar")
-                }
-
-            AboutCasinoView()
-                .tabItem {
-                    Label("About", systemImage: "building.2.fill")
-                }
-
-            SettingsView(viewModel: viewModel)
-                .tabItem {
-                    Label("Profile", systemImage: "person.crop.circle.fill")
-                }
+        ZStack(alignment: .bottom) {
+            TabView(selection: $selectedTab) {
+                BonusesView(viewModel: viewModel)
+                    .tag(0)
+                
+                EventsView(viewModel: viewModel)
+                    .tag(1)
+                
+                AboutCasinoView()
+                    .tag(2)
+                
+                SettingsView(viewModel: viewModel)
+                    .tag(3)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .tint(AppTheme.gold)
+            
+            customTabBar
         }
-        .tint(AppTheme.gold)
+        .background(
+            AppBackground()
+        )
+        .ignoresSafeArea(edges: .bottom)
+    }
+    
+    private var customTabBar: some View {
+        HStack(spacing: 0) {
+            ForEach(0..<tabs.count, id: \.self) { index in
+                Button {
+                    selectedTab = index
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: icon(for: index))
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 24)
+                            .foregroundStyle(selectedTab == index ? AppTheme.gold : .white.opacity(0.5))
+                        
+                        Text(tabs[index])
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(selectedTab == index ? AppTheme.gold : .white.opacity(0.5))
+                        
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .background(
+            LinearGradient(
+                colors: [AppTheme.deepPurple, AppTheme.purple, .black],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(AppTheme.gold.opacity(0.45), lineWidth: 1)
+        )
+        .padding(16)
+        .padding(.bottom, 15)
+    }
+    
+    private func icon(for index: Int) -> String {
+        switch index {
+        case 0: return "gift.fill"
+        case 1: return "calendar"
+        case 2: return "building.2.fill"
+        case 3: return "person.crop.circle.fill"
+            
+        default: return ""
+        }
+    }
+    
+    private func selectedIcon(for index: Int) -> String {
+        switch index {
+        case 0: return "tab1IconSelectedFP"
+        case 1: return "tab2IconSelectedFP"
+        case 2: return "tab3IconSelectedFP"
+        case 3: return "tab4IconSelectedFP"
+        default: return ""
+        }
     }
 }
 
@@ -1069,6 +1132,17 @@ struct BonusesView: View {
 
                 ScrollView {
                     VStack(spacing: 16) {
+                        
+                        Text("Bonuses")
+                            .font(.largeTitle)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Image(.logoHL)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 100)
+                        
                         HeaderView(viewModel: viewModel)
 
                         ScratchCardView(viewModel: viewModel)
@@ -1109,10 +1183,9 @@ struct BonusesView: View {
                         }
                     }
                     .padding()
+                    .padding(.bottom, 150)
                 }
             }
-            .navigationTitle("Bonuses")
-            .navigationBarTitleDisplayMode(.inline)
             .alert(
                 "Redeem Bonus?",
                 isPresented: Binding(
@@ -1342,12 +1415,16 @@ struct EventsView: View {
     @State private var ticketSheet: EventTicketSheet?
 
     var body: some View {
-        NavigationStack {
             ZStack {
                 AppBackground()
 
                 ScrollView {
                     VStack(spacing: 16) {
+                        Text("Events")
+                            .font(.largeTitle)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
                         HeaderView(viewModel: viewModel)
 
                         EventCalendarView(
@@ -1372,10 +1449,9 @@ struct EventsView: View {
                         }
                     }
                     .padding()
+                    .padding(.bottom, 150)
                 }
             }
-            .navigationTitle("Events")
-            .navigationBarTitleDisplayMode(.inline)
             .sheet(item: $ticketSheet) { sheet in
                 QRInstructionView(
                     title: sheet.event.name,
@@ -1399,7 +1475,7 @@ struct EventsView: View {
                     }
                 )
             }
-        }
+        
     }
 }
 
@@ -1515,35 +1591,20 @@ struct EventRowView: View {
         GlassCard {
             VStack(alignment: .leading, spacing: 12) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 18)
-                        .fill(
-                            LinearGradient(
-                                colors: [AppTheme.deepPurple, AppTheme.accentPurple],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    HStack {
-                        Text(event.emoji)
-                            .font(.system(size: 48))
-
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(event.name)
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .lineLimit(2)
-
-                            Text(event.dateDisplay)
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.75))
+                    
+                    Image(event.emoji)
+                        .resizable()
+                        .scaledToFit()
+                        .overlay {
+                            Image("ramka")
+                                .resizable()
+                                .scaledToFill()
+                                .padding(-15)
                         }
 
-                        Spacer()
-                    }
-                    .padding()
+                    
                 }
-                .frame(height: 120)
+                
 
                 HStack {
                     Text("\(event.status.icon) \(event.status.title)")
@@ -1558,6 +1619,7 @@ struct EventRowView: View {
                             .foregroundColor(AppTheme.gold)
                     }
                 }
+                .padding(.top, 10)
 
                 Text(event.location)
                     .font(.subheadline)
@@ -1597,8 +1659,10 @@ struct EventDetailView: View {
                             )
 
                         VStack(spacing: 10) {
-                            Text(event.emoji)
-                                .font(.system(size: 70))
+                            Image(event.emoji)
+                                .resizable()
+                                .scaledToFit()
+                                .clipShape(RoundedRectangle(cornerRadius: 22))
 
                             Text(event.name)
                                 .font(.title2.bold())
@@ -1657,8 +1721,6 @@ struct EventDetailView: View {
                 .padding()
             }
         }
-        .navigationTitle("Event Details")
-        .navigationBarTitleDisplayMode(.inline)
         .alert("Register for Event?", isPresented: $showConfirm) {
             Button("Cancel", role: .cancel) {}
 
@@ -1721,6 +1783,10 @@ struct AboutCasinoView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
+                        Text("About Casino")
+                            .font(.largeTitle)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         Text("🏨 About Harrah's Las Vegas")
                             .font(.title2.bold())
                             .foregroundColor(.white)
@@ -1728,21 +1794,18 @@ struct AboutCasinoView: View {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                             ForEach(photoTitles, id: \.self) { title in
                                 ZStack(alignment: .bottomLeading) {
-                                    RoundedRectangle(cornerRadius: 18)
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [AppTheme.purple, AppTheme.deepPurple],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
+                                    
+                                    Image(title)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .clipShape(RoundedRectangle(cornerRadius: 18))
 
                                     Text(title)
                                         .font(.caption.bold())
                                         .foregroundColor(.white)
                                         .padding(10)
                                 }
-                                .frame(height: 95)
+                                .frame(height: 110)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 18)
                                         .stroke(AppTheme.gold.opacity(0.4), lineWidth: 1)
@@ -1813,10 +1876,9 @@ struct AboutCasinoView: View {
                         )
                     }
                     .padding()
+                    .padding(.bottom, 150)
                 }
             }
-            .navigationTitle("About Casino")
-            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
@@ -1837,6 +1899,7 @@ struct AboutSection: View {
                     .foregroundColor(.white.opacity(0.82))
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -1846,126 +1909,174 @@ struct AboutSection: View {
 struct SettingsView: View {
     @ObservedObject var viewModel: HarrahsViewModel
 
-    @State private var levelUpMessage: String?
-    @State private var showLevelUp = false
+       @State private var isAuthSheetPresented = false
+       @State private var levelUpMessage: String?
+       @State private var showLevelUp = false
 
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                AppBackground()
+       var body: some View {
+           NavigationStack {
+               ZStack {
+                   AppBackground()
 
-                ScrollView {
-                    VStack(spacing: 16) {
-                        GlassCard {
-                            VStack(spacing: 14) {
-                                ZStack {
-                                    Circle()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [AppTheme.gold, AppTheme.accentPurple],
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            )
-                                        )
-                                        .frame(width: 110, height: 110)
+                   ScrollView {
+                       VStack(spacing: 16) {
+                           
+                           Text("Profile")
+                               .font(.largeTitle)
+                               .foregroundColor(.white)
+                               .frame(maxWidth: .infinity, alignment: .leading)
+                           
+                           profileHeader
 
-                                    Text("🎭")
-                                        .font(.system(size: 50))
-                                }
+                           if viewModel.isAuthenticated {
+                               authenticatedSettings
+                           } else {
+                               guestSettings
+                           }
 
-                                Text(viewModel.username)
-                                    .font(.title3.bold())
-                                    .foregroundColor(.white)
+                           loyaltyStatusCard
 
-                                Text("Unity Rewards Member")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.7))
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+                           if viewModel.isAuthenticated {
+                               Button {
+                                   viewModel.signOut()
+                               } label: {
+                                   Text("Log Out")
+                                       .foregroundColor(.white)
+                                       .frame(maxWidth: .infinity)
+                                       .padding()
+                                       .background(Color.white.opacity(0.12))
+                                       .cornerRadius(18)
+                               }
+                           }
+                       }
+                       .padding()
+                       .padding(.bottom, 150)
+                   }
+               }
+               .sheet(isPresented: $isAuthSheetPresented) {
+                   
+                   AuthModalView(viewModel: viewModel)
+               }
+               .alert("Level Up!", isPresented: $showLevelUp) {
+                   Button("Great", role: .cancel) {}
+               } message: {
+                   Text(levelUpMessage ?? "")
+               }
+           }
+       }
 
-                        GlassCard {
-                            VStack(alignment: .leading, spacing: 14) {
-                                Text("👤 Profile")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
+       private var profileHeader: some View {
+           GlassCard {
+               VStack(spacing: 14) {
+                   ZStack {
 
-                                TextField("Username", text: .constant(viewModel.username))
-                                    .disabled(true)
-                                    .padding()
-                                    .background(Color.white.opacity(0.1))
-                                    .cornerRadius(14)
-                                    .foregroundColor(.white)
+                       Image(viewModel.isAuthenticated ? "isAuthenticated" : "notAuthenticated")
+                           .resizable()
+                           .scaledToFit()
+                           .frame(height: 110)
+                   }
 
-                                Toggle("🔔 Notifications", isOn: $viewModel.notificationsEnabled)
-                                    .tint(AppTheme.gold)
-                                    .foregroundColor(.white)
-                            }
-                        }
+                   Text(viewModel.username)
+                       .font(.title3.bold())
+                       .foregroundColor(.white)
 
-                        GlassCard {
-                            VStack(alignment: .leading, spacing: 14) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Loyalty Status")
-                                            .font(.headline)
-                                            .foregroundColor(.white)
+                   Text(viewModel.isAuthenticated ? "Unity Rewards Member" : "Guest Mode")
+                       .font(.subheadline)
+                       .foregroundColor(.white.opacity(0.7))
+               }
+               .frame(maxWidth: .infinity)
+           }
+       }
 
-                                        Text("\(viewModel.currentTier.icon) \(viewModel.currentTier.title)")
-                                            .font(.title2.bold())
-                                            .foregroundColor(AppTheme.gold)
-                                    }
+       private var guestSettings: some View {
+           GlassCard {
+               VStack(alignment: .leading, spacing: 14) {
+                   Text("Guest Mode")
+                       .font(.headline)
+                       .foregroundColor(.white)
 
-                                    Spacer()
-                                }
+                   Text("You can explore bonuses, events and casino information as a guest. Sign in or register to personalize your profile.")
+                       .font(.subheadline)
+                       .foregroundColor(.white.opacity(0.75))
 
-                                ProgressView(value: viewModel.tierProgress)
-                                    .tint(AppTheme.gold)
+                   Button {
+                       isAuthSheetPresented = true
+                   } label: {
+                       Text("🎭 Sign In / Register")
+                   }
+                   .buttonStyle(PrimaryButtonStyle())
+               }
+           }
+       }
 
-                                Text(viewModel.tierProgressText)
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.75))
+       private var authenticatedSettings: some View {
+           GlassCard {
+               VStack(alignment: .leading, spacing: 14) {
+                   Text("👤 Profile")
+                       .font(.headline)
+                       .foregroundColor(.white)
 
-                                Text(viewModel.currentTier.description)
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.8))
+                   TextField("Username", text: .constant(viewModel.username))
+                       .disabled(true)
+                       .padding()
+                       .background(Color.white.opacity(0.1))
+                       .cornerRadius(14)
+                       .foregroundColor(.white)
+               }
+           }
+       }
 
-                                Button {
-                                    if let message = viewModel.addTierCredits(60) {
-                                        levelUpMessage = message
-                                        showLevelUp = true
-                                    }
-                                } label: {
-                                    Text("Simulate Play: +60 Tier Credits")
-                                }
-                                .buttonStyle(PrimaryButtonStyle())
-                            }
-                        }
+       private var loyaltyStatusCard: some View {
+           GlassCard {
+               VStack(alignment: .leading, spacing: 14) {
+                   HStack {
+                       VStack(alignment: .leading, spacing: 4) {
+                           Text("Loyalty Status")
+                               .font(.headline)
+                               .foregroundColor(.white)
 
-                        Button {
-                            viewModel.signOut()
-                        } label: {
-                            Text("Log Out")
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.white.opacity(0.12))
-                                .cornerRadius(18)
-                        }
-                    }
-                    .padding()
-                }
-            }
-            .navigationTitle("Profile")
-            .navigationBarTitleDisplayMode(.inline)
-            .alert("Level Up!", isPresented: $showLevelUp) {
-                Button("Great", role: .cancel) {}
-            } message: {
-                Text(levelUpMessage ?? "")
-            }
-        }
-    }
-}
+                       }
+
+                       Spacer()
+                   }
+                   
+                   VStack {
+                       Image(viewModel.currentTier.image)
+                           .resizable()
+                           .scaledToFit()
+                           .frame(height: 100)
+                       
+                       Text("\(viewModel.currentTier.title)")
+                           .font(.title2.bold())
+                           .foregroundColor(AppTheme.gold)
+                       
+                   }
+                   .frame(maxWidth: .infinity, alignment: .center)
+
+                   ProgressView(value: viewModel.tierProgress)
+                       .tint(AppTheme.gold)
+
+                   Text(viewModel.tierProgressText)
+                       .font(.caption)
+                       .foregroundColor(.white.opacity(0.75))
+
+                   Text(viewModel.currentTier.description)
+                       .font(.subheadline)
+                       .foregroundColor(.white.opacity(0.8))
+
+                   Button {
+                       if let message = viewModel.addTierCredits(60) {
+                           levelUpMessage = message
+                           showLevelUp = true
+                       }
+                   } label: {
+                       Text("Simulate Play: +60 Tier Credits")
+                   }
+                   .buttonStyle(PrimaryButtonStyle())
+               }
+           }
+       }
+   }
 
 // MARK: - QR View
 
@@ -2079,6 +2190,181 @@ struct EmptyStateView: View {
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+struct AuthModalView: View {
+    @ObservedObject var viewModel: HarrahsViewModel
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var selectedMode: AuthMode = .signIn
+    @State private var username = ""
+    @State private var password = ""
+    @State private var repeatPassword = ""
+    @State private var isPasswordVisible = false
+    @State private var errorText: String?
+
+    var body: some View {
+        ZStack {
+            AppBackground()
+
+            VStack(spacing: 20) {
+                Capsule()
+                    .fill(Color.white.opacity(0.25))
+                    .frame(width: 44, height: 5)
+                    .padding(.top, 8)
+
+                Text("Unity Account")
+                    .font(.title2.bold())
+                    .foregroundColor(.white)
+
+                Image(.logoHL)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 100)
+                
+                Picker("Mode", selection: $selectedMode) {
+                    ForEach(AuthMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                GlassCard {
+                    VStack(spacing: 16) {
+                        TextField("Username", text: $username)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .padding()
+                            .background(Color.white.opacity(0.12))
+                            .cornerRadius(14)
+                            .foregroundColor(.white)
+
+                        HStack {
+                            if isPasswordVisible {
+                                TextField("Password", text: $password)
+                                    .foregroundColor(.white)
+                            } else {
+                                SecureField("Password", text: $password)
+                                    .foregroundColor(.white)
+                            }
+
+                            Button {
+                                isPasswordVisible.toggle()
+                            } label: {
+                                Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
+                                    .foregroundColor(AppTheme.gold)
+                            }
+                        }
+                        .padding()
+                        .background(Color.white.opacity(0.12))
+                        .cornerRadius(14)
+
+                        if selectedMode == .register {
+                            SecureField("Repeat Password", text: $repeatPassword)
+                                .padding()
+                                .background(Color.white.opacity(0.12))
+                                .cornerRadius(14)
+                                .foregroundColor(.white)
+                        }
+
+                        if let errorText {
+                            Text(errorText)
+                                .font(.caption)
+                                .foregroundColor(AppTheme.coral)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        Button {
+                            submit()
+                        } label: {
+                            Text(selectedMode.buttonTitle)
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                    }
+                }
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Continue as Guest")
+                        .foregroundColor(.white.opacity(0.8))
+                }
+
+                Spacer()
+            }
+            .padding()
+        }
+    }
+
+    private func submit() {
+        errorText = nil
+
+        let cleanUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !cleanUsername.isEmpty else {
+            errorText = "Enter username."
+            return
+        }
+
+        guard cleanUsername.count >= 3 else {
+            errorText = "Username must contain at least 3 characters."
+            return
+        }
+
+        guard password.count >= 4 else {
+            errorText = "Password must contain at least 4 characters."
+            return
+        }
+
+        if selectedMode == .register {
+            guard password == repeatPassword else {
+                errorText = "Passwords do not match."
+                return
+            }
+
+            let success = viewModel.register(username: cleanUsername, password: password)
+
+            if success {
+                dismiss()
+            } else {
+                errorText = "Registration failed."
+            }
+        } else {
+            let success = viewModel.signIn(username: cleanUsername, password: password)
+
+            if success {
+                dismiss()
+            } else {
+                errorText = "Sign in failed."
+            }
+        }
+    }
+}
+
+enum AuthMode: String, CaseIterable, Identifiable {
+    case signIn
+    case register
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .signIn:
+            return "Sign In"
+        case .register:
+            return "Register"
+        }
+    }
+
+    var buttonTitle: String {
+        switch self {
+        case .signIn:
+            return "🎭 Sign In"
+        case .register:
+            return "🎭 Create Account"
         }
     }
 }

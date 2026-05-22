@@ -1,3 +1,10 @@
+//
+//  SCLoaderView.swift
+//  Harrahs Las Vegas Loyalty App
+//
+//
+
+
 import SwiftUI
 
 struct SCLoaderView: View {
@@ -7,7 +14,7 @@ struct SCLoaderView: View {
     var body: some View {
         ZStack {
             ZStack {
-                Image("SCLoaderImage")
+                Image("HLLoaderImage")
                     .resizable()
                     .ignoresSafeArea()
                     .scaledToFill()
@@ -18,7 +25,7 @@ struct SCLoaderView: View {
             
             VStack(spacing: 0) {
                 
-                Image("SCLoaderImage")
+                Image("HLLoaderImage")
                     .resizable()
                     .scaledToFit()
                     .frame(height: 200)

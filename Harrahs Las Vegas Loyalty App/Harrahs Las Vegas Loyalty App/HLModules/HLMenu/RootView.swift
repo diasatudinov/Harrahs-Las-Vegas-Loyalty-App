@@ -1,10 +1,15 @@
+//
+//  RootView.swift
+//  Harrahs Las Vegas Loyalty App
+//
+//
+
+
 import SwiftUI
 import CoreImage.CIFilterBuiltins
 import UIKit
 
-#Preview(body: {
-    RootView()
-})
+
 // MARK: - Root
 
 struct RootView: View {
@@ -16,3 +21,7 @@ struct RootView: View {
         }
     }
 }
+
+#Preview(body: {
+    RootView()
+})
