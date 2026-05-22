@@ -2,12 +2,11 @@
 //  ContentView.swift
 //  Harrahs Las Vegas Loyalty App
 //
-//  Created by Dias Atudinov on 21.05.2026.
 //
 
 import SwiftUI
 
-struct ContentView: View {
+struct ContentView1: View {
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -20,5 +19,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView1()
 }
