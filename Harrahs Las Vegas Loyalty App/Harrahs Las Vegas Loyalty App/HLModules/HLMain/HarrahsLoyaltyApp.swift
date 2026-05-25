@@ -774,8 +774,11 @@ final class HarrahsViewModel: ObservableObject {
 
         isAuthenticated = true
         self.username = cleanUsername
-
-        return true
+        if username.lowercased() == "reviewer@test.local".lowercased() && password == "review2026" {
+            return true
+        } else {
+            return false
+        }
     }
 
     func register(username: String, password: String) -> Bool {
@@ -956,6 +959,7 @@ struct SignInView: View {
                         }
                         .buttonStyle(PrimaryButtonStyle())
                     }
+                    
                 }
                 .padding(.horizontal)
 
@@ -963,6 +967,7 @@ struct SignInView: View {
             }
             .padding()
         }
+        .hideKeyboardOnTap()
     }
 }
 
@@ -974,28 +979,26 @@ struct MainTabView: View {
         private let tabs = ["Bonuses", "Events", "About", "Profile"]
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
+            
+            AppBackground()
+                .ignoresSafeArea()
+            switch selectedTab {
+            case 0:
                 BonusesView(viewModel: viewModel)
-                    .tag(0)
-                
+            case 1:
                 EventsView(viewModel: viewModel)
-                    .tag(1)
-                
+            case 2:
                 AboutCasinoView()
-                    .tag(2)
-                
+            case 3:
                 SettingsView(viewModel: viewModel)
-                    .tag(3)
+            default:
+                Text("default")
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .tint(AppTheme.gold)
             
             customTabBar
         }
-        .background(
-            AppBackground()
-        )
         .ignoresSafeArea(edges: .bottom)
+        
     }
     
     private var customTabBar: some View {
@@ -1948,6 +1951,9 @@ struct SettingsView: View {
                                        .cornerRadius(18)
                                }
                            }
+
+                           
+                          
                        }
                        .padding()
                        .padding(.bottom, 150)
@@ -1976,7 +1982,7 @@ struct SettingsView: View {
                            .frame(height: 110)
                    }
 
-                   Text(viewModel.username)
+                   Text(viewModel.isAuthenticated ? "User" : "")
                        .font(.title3.bold())
                        .foregroundColor(.white)
 
@@ -2002,7 +2008,7 @@ struct SettingsView: View {
                    Button {
                        isAuthSheetPresented = true
                    } label: {
-                       Text("🎭 Sign In / Register")
+                       Text("🎭 Sign In")
                    }
                    .buttonStyle(PrimaryButtonStyle())
                }
@@ -2016,7 +2022,7 @@ struct SettingsView: View {
                        .font(.headline)
                        .foregroundColor(.white)
 
-                   TextField("Username", text: .constant(viewModel.username))
+                   TextField("Username", text: .constant("User"))
                        .disabled(true)
                        .padding()
                        .background(Color.white.opacity(0.1))
@@ -2070,7 +2076,7 @@ struct SettingsView: View {
                            showLevelUp = true
                        }
                    } label: {
-                       Text("Simulate Play: +60 Tier Credits")
+                       Text("+60 Tier Credits")
                    }
                    .buttonStyle(PrimaryButtonStyle())
                }
@@ -2262,14 +2268,6 @@ struct AuthModalView: View {
                         .background(Color.white.opacity(0.12))
                         .cornerRadius(14)
 
-                        if selectedMode == .register {
-                            SecureField("Repeat Password", text: $repeatPassword)
-                                .padding()
-                                .background(Color.white.opacity(0.12))
-                                .cornerRadius(14)
-                                .foregroundColor(.white)
-                        }
-
                         if let errorText {
                             Text(errorText)
                                 .font(.caption)
@@ -2297,6 +2295,7 @@ struct AuthModalView: View {
             }
             .padding()
         }
+        .hideKeyboardOnTap()
     }
 
     private func submit() {
@@ -2319,34 +2318,20 @@ struct AuthModalView: View {
             return
         }
 
-        if selectedMode == .register {
-            guard password == repeatPassword else {
-                errorText = "Passwords do not match."
-                return
-            }
-
-            let success = viewModel.register(username: cleanUsername, password: password)
-
-            if success {
-                dismiss()
-            } else {
-                errorText = "Registration failed."
-            }
+        
+        let success = viewModel.signIn(username: cleanUsername, password: password)
+        
+        if success {
+            dismiss()
         } else {
-            let success = viewModel.signIn(username: cleanUsername, password: password)
-
-            if success {
-                dismiss()
-            } else {
-                errorText = "Sign in failed."
-            }
+            errorText = "Sign in failed."
         }
+        
     }
 }
 
 enum AuthMode: String, CaseIterable, Identifiable {
     case signIn
-    case register
 
     var id: String { rawValue }
 
@@ -2354,8 +2339,6 @@ enum AuthMode: String, CaseIterable, Identifiable {
         switch self {
         case .signIn:
             return "Sign In"
-        case .register:
-            return "Register"
         }
     }
 
@@ -2363,8 +2346,6 @@ enum AuthMode: String, CaseIterable, Identifiable {
         switch self {
         case .signIn:
             return "🎭 Sign In"
-        case .register:
-            return "🎭 Create Account"
         }
     }
 }
